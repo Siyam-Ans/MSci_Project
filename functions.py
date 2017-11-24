@@ -10,6 +10,8 @@ import scipy as sp
 import random as ran
 from data import *
 
+#git test
+
 def modulus(array):
     """Modulus of a vector"""
     if isinstance(array,np.ndarray)== True:
