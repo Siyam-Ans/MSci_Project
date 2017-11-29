@@ -9,13 +9,19 @@ import numpy as np
 import scipy.integrate as spi
 import matplotlib.pyplot as plt
 from functions import *
+import scipy as sp
 
 
 def gradient_Kepler(x,y,phi_0,e):
     A = np.cos(phi_0)
     B = np.sin(phi_0)
-    dy = -(2*x*np.sqrt(x**2+y**2)*(1+e*e*A*A) + 2*e*A*(2*x*x + y*y) + 2*e*B*y*x + 2*A*B*y*e*e*np.sqrt(x*x + y*y))
-    dx = 2*y*np.sqrt(x**2+y**2)*(1+e*e*B*B) + 2*e*B*(x*x + 2*y*y) + 2*e*A*y*x + 2*A*B*x*e*e
+    dy = -(x+e*A*np.sqrt(x**2+y**2))
+    dx = y + B*e*np.sqrt(x**2+y**2)
+    
+    """
+    dy = (2*x*np.sqrt(x**2+y**2)*(1+e*e*A*A) + 2*e*A*(2*x*x + y*y) + 2*e*B*y*x + 2*A*B*y*e*e*np.sqrt(x*x + y*y))
+    dx = -(2*y*np.sqrt(x**2+y**2)*(1+e*e*B*B) + 2*e*B*(x*x + 2*y*y) + 2*e*A*y*x + 2*A*B*x*e*e)
+    """
     return dy/dx
     
     
@@ -47,6 +53,7 @@ def new_point_func(position, velocity,DM):
     vel_phi = np.dot(velocity,perp_hat)
     vy_0 = vel_phi
     vx_0 = np.dot(velocity,r_hat)
+    
     L = DM.m*radial_dist*vel_phi
     
     r_0 = L**2/(DM.m*DM.m*mass_sun*G*r_chi**-3)
@@ -64,6 +71,9 @@ def new_point_func(position, velocity,DM):
         
         phi_0 = np.arccos((r_0 - radial_dist)/(eps*radial_dist))
   
+    
+    
+    
     
     
     
@@ -119,20 +129,45 @@ def new_point_func(position, velocity,DM):
     plt.plot(new_position[0],new_position[1], 'mx', markersize=20,label='Initial Position',markeredgewidth='3')
     
     #new velocity
+    grad_0 = gradient_Kepler(x_0,y_0,phi_0,eps)
     grad = gradient_Kepler(x_new,y_new,phi_0,eps)
+    
+    
     vx_new_square = (speed**2)/(1 + grad*grad)
     vy_new_square = (speed**2) - vx_new_square
-    if vx_0 > 0:
+   
+    
+    if grad_0*grad >0:
+        if vx_0>0:
+            vx_new = -np.sqrt(vx_new_square)
+        else:
+            vx_new = np.sqrt(vx_new_square)
+        if vy_0 >0:
+            vy_new =  - np.sqrt(vy_new_square) 
+        else:
+            vy_new =  np.sqrt(vy_new_square) 
+    else:
+         
         vx_new = - np.sqrt(vx_new_square)
-    elif vx_0 < 0:
+        if vy_0 >0:
+            vy_new =  np.sqrt(vy_new_square) 
+        else:
+            vy_new =  - np.sqrt(vy_new_square)
+  
+        
+    
+    """
+    if vx_0 > 0:
+        vx_new = -np.sqrt(vx_new_square)
+    else:
         vx_new = np.sqrt(vx_new_square)
     if vy_0 > 0:
-        vy_new = - np.sqrt(vx_new_square) 
-    elif vy_0 < 0:
-        vy_new = np.sqrt(vx_new_square) 
-    
-    new_velocity = vx_new*r_hat + vy_new*perp_hat
-    
+        vy_new =  -np.sqrt(vy_new_square) 
+    else: 
+        vy_new = +np.sqrt(vy_new_square) 
+    """
+    new_velocity = (vx_new*r_hat) + (vy_new*perp_hat)
+
     
     
     return [new_position,new_velocity]
@@ -157,8 +192,8 @@ def f(z,t):
 
 t = sp.linspace(0,60000,10000)
 
-def trajectory(x,vx,vy):
-    initial = [x,vx,0,vy,0,0]
+def trajectory(x,y,vx,vy):
+    initial = [x,vx,y,vy,0,0]
     soln = spi.odeint(f,initial,t)
     x = soln[:,0]
     vx = soln[:,1]
@@ -170,10 +205,10 @@ def trajectory(x,vx,vy):
     plt.ylabel("Vertical Displacement ")
    
     
-    plt.plot(20,0, 'mx', markersize=20,label='Initial Position',markeredgewidth='3')
+    plt.plot(boundary,0, 'mx', markersize=20,label='Initial Position',markeredgewidth='3')
     
     
-    circle1 =plt.Circle((0,0),20,color='r') # adding mars to the plot
+    circle1 =plt.Circle((0,0),boundary,color='r') # adding mars to the plot
     fig=plt.gcf()
     fig.gca().add_artist(circle1)
     plt.legend(numpoints=1,loc='upper left')

@@ -23,11 +23,11 @@ class DM:
         self.cs = cs/(r_chi*r_chi)
         self.leftsun = False
         self.escaped = False
-        self.position_leave = [0,0,0]
-        self.position_reenter = [0,0,0]
-        self.velocity_leave = [0,0,0]
-        self.velocity_reenter = [0,0,0]
-        self.leavetime = 0
+        self.position_leave = []
+        self.position_reenter = []
+        self.velocity_leave = []
+        self.velocity_reenter = []
+        self.leavetime = []
        
 
     def append(self,r,v,t):
